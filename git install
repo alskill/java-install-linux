@@ -1,0 +1,127 @@
+cat /etc/hostname 
+vi /etc/hostname
+change host name 
+
+hostname jenkins_server
+sudo yum install git -y
+git --version
+
+jenkins GUI 
+manage jenkins 
+available 
+github
+download and install
+
+configure jenkins 
+global tools configuration 
+git  
+name : git 
+path:   go check in aws cli   
+where is git  copy and paste path
+apply ... save
+
+
+how to pull code from github to jenkins
+
+free style job
+source code mnagement    git
+repository   :  go and copy git URL and paste
+credential  :  its for private repository 
+apply....  save
+
+build job
+how to check if git has cloned to jenkins work space once build u could see jenkins workspace on console output
+/var/lib/jenkins/workspace  
+now
+cd /var/lib/jenkins/workspace 
+ll
+check pull code from github is where the cloned 
+
+
+step 2
+
+maven with jenkins
+it is java application go apache maven download 
+aws cli
+cd root
+cd /opt
+wget 	apache-maven-3.9.11-bin.tar.gz
+tar -xvzf apache-maven-3.9.11-bin.tar.gz
+ll
+mv directory name maven
+ll
+cd maven
+ll
+can see different directories
+cd bin
+./mvn -v
+cd ~
+ll
+pwd
+it will be root
+ll -a
+vi .bash_profile
+edit 
+M2_HOME=/opt/maven # (where maven is locaed )
+M2=/opt/maven/bin  # (where binary files are located)
+ #(open duplicate session sudo su -   find / -name java-17*
+JAVA_HOME=copy the path of java  it will located in /usr/lib/java
+
+PATH=$PATH /bin:$JAVA_HOME:$M2_HOME:$M2  ($ TAKES VALUE PROVIDDED ABOVE)
+:savefile
+check 
+echo $PATH  (it wont update )
+either logout and login (now it will be update
+source .bash_profile
+echo $PATH
+mvn -v #(now u van execute)
+
+configure maven in jenkins
+manage plugin
+available
+maven 
+download install
+
+manage jenkins
+global configuration
+install JDk 
+name:  java 17
+JAVA_HOME :  #(copy from echo $PATH and paste)
+
+maveN
+NAME : MAVEN 3.9.11
+MAVEN_HOME : /opt/maven
+apply  save
+
+now build job
+new project name
+maven project
+ok
+
+give description 
+git : clone repository
+goals : clean install
+apply   save
+
+build
+it has created a warfile while building the project
+cd /var/lib/jenkins
+ll
+cd workspace/
+ll
+cd webapp
+ll
+cd target
+ll   (here artifacts get created)
+
+
+
+
+
+
+
+
+
+
+
+

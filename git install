@@ -3,6 +3,11 @@ vi /etc/hostname
 change host name 
 
 hostname jenkins_server
+
+first install jenkins plugin and dependencies and java   
+
+INSTALL GIT 
+
 sudo yum install git -y
 git --version
 

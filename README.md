@@ -2,82 +2,93 @@
 
 # install amazon linux 2023
 
-
-Installing Jenkins on an Amazon Linux 2023 EC2 instance is a straightforward process using MobaXterm to SSH into your instance. Since Amazon Linux 2023 uses DNF (which yum is an alias for) and provides Amazon Corretto 11 directly, you'll install both Jenkins and its Java dependency using the same package manager.
-
-Step-by-Step Installation
-Connect to Your EC2 Instance
-Use MobaXterm to connect to your EC2 instance via SSH. Make sure you have your private key (.pem file) configured in your MobaXterm session.
-
-Update the System
-It's a best practice to update your system packages before installing new software.   
-
-Bash
+✅ Step 1: Update system
 
 sudo dnf update -y
-Install Java
-Jenkins requires a Java Development Kit (JDK) to run. Amazon Corretto 11 is the recommended and readily available JDK for Amazon Linux 2023.   
 
-Bash
+✅ Step 2: Install Java 17 or 21
 
-sudo yum install java-11-amazon-corretto-devel -y
-The -devel package includes the JDK, which is necessary for Jenkins.
+Jenkins (latest LTS) requires Java 17+. Install Amazon Corretto 17:
 
-Add the Jenkins Repository
-Jenkins is not in the default Amazon Linux repositories, so you need to add its official repository.   
+sudo dnf install java-17-amazon-corretto -y
 
-Bash
 
-sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-Import the Jenkins GPG Key
-To verify the integrity of the downloaded packages, import the Jenkins GPG key.   
+Check:
 
-Bash
+java -version
 
+
+You should see openjdk version "17...".
+
+✅ Step 3: Add Jenkins repository
+
+Jenkins is not in default Amazon Linux repos, so add the official Jenkins repo:
+
+sudo curl -fsSL https://pkg.jenkins.io/redhat-stable/jenkins.repo -o /etc/yum.repos.d/jenkins.repo
 sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
-Install Jenkins
-Now you can install Jenkins using the yum command.   
 
-Bash
+✅ Step 4: Install Jenkins
 
-sudo yum install jenkins -y
-Start and Enable the Jenkins Service
-After installation, start the Jenkins service and enable it to run automatically on system boot.   
+sudo dnf install jenkins -y
 
-Bash
 
-sudo systemctl start jenkins
+This installs:
+Service file → /usr/lib/systemd/system/jenkins.service
+War file → /usr/share/java/jenkins.war
+Logs → /var/log/jenkins/jenkins.log
+Config → /etc/sysconfig/jenkins (Amazon Linux 2) or systemd unit on AL2023
+
+✅ Step 5: Adjust service file (Java 17 path)
+
+By default, the unit may still point to /usr/bin/java. Verify:
+
+cat /usr/lib/systemd/system/jenkins.service | grep ExecStart
+
+If it doesn’t use Java 17, edit:
+
+sudo vi /usr/lib/systemd/system/jenkins.service
+
+
+Replace ExecStart with:
+
+ExecStart=/usr/lib/jvm/java-17-amazon-corretto.x86_64/bin/java -Djava.awt.headless=true -jar /usr/share/java/jenkins.war --httpPort=8080
+
+
+Save with :wq.
+
+✅ Step 6: Reload and start Jenkins
+
+sudo systemctl daemon-reload
 sudo systemctl enable jenkins
-sudo systemctl status jenkins
-The last command, sudo systemctl status jenkins, will confirm if the service is active and running.
+sudo systemctl start jenkins
 
-Configure the Security Group 🛡️
-Jenkins runs on port 8080 by default. To access the web interface from your browser, you must add an inbound rule to your EC2 instance's security group to allow traffic on port 8080.   
+✅ Step 7: Check if it’s running
+sudo systemctl status jenkins -l
 
-Navigate to your EC2 instance in the AWS Management Console.
 
-Click on the Security tab.
+You should see:       Active: active (running)
+Also confirm port 8080 is listening:
 
-Click on the security group link.
+ss -ltnp | grep 8080
 
-Select the Inbound rules tab and click Edit inbound rules.
+✅ Step 8: Open firewall (if needed)
 
-Add a new rule with:
+If using firewalld:
 
-Type: Custom TCP
+sudo firewall-cmd --permanent --add-port=8080/tcp
+sudo firewall-cmd --reload
 
-Port range: 8080   
 
-Source: You can select "My IP" for a more secure connection or "Anywhere IPv4" if you're comfortable with it being publicly accessible.
+Or if on AWS EC2 → open port 8080 in the security group.
 
-Click Save rules.
+✅ Step 9: Unlock Jenkins
 
-Access Jenkins 🚀
-Open a web browser and navigate to http://<your-ec2-public-ip>:8080. You should see the Jenkins setup wizard. To unlock it, you'll need the initial administrator password.   
-
-Retrieve the Initial Admin Password
-On your MobaXterm terminal, run the following command to get the password from the Jenkins log file.
-
-Bash
+Get the initial admin password:
 
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+
+Paste the password, complete setup wizard, install plugins, and create admin user.
+
+
+

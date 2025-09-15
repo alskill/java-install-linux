@@ -100,4 +100,6 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 Paste the password, complete setup wizard, install plugins, and create admin user.
 
 
+Private IP (inside AWS VPC):   hostname -I
+To check Public IP of EC2:   curl -s http://checkip.amazonaws.com
 

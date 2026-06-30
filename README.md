@@ -1,105 +1,459 @@
-# java-install-yum
+# Jenkins + Git + Maven Setup (Amazon Linux)
 
-# install amazon linux 2023
+---
 
-✅ Step 1: Update system
+# Step 1: Change Hostname
 
-sudo dnf update -y
+Check current hostname.
 
-✅ Step 2: Install Java 17 or 21
+```bash
+cat /etc/hostname
+```
 
-Jenkins (latest LTS) requires Java 17+. Install Amazon Corretto 17:
+Edit hostname.
 
-sudo dnf install java-17-amazon-corretto -y
+```bash
+sudo vi /etc/hostname
+```
 
+Example:
 
-Check:
+```
+jenkins_server
+```
 
+Set hostname immediately.
+
+```bash
+sudo hostnamectl set-hostname jenkins_server
+```
+
+Verify.
+
+```bash
+hostname
+```
+
+---
+
+# Step 2: Install Java
+
+Update packages.
+
+```bash
+sudo yum update -y
+```
+
+Install Java 17.
+
+```bash
+sudo yum install java-17-amazon-corretto-devel -y
+```
+
+Verify Java.
+
+```bash
 java -version
+```
 
+---
 
-You should see openjdk version "17...".
+# Step 3: Install Git
 
-✅ Step 3: Add Jenkins repository
+Install Git.
 
-Jenkins is not in default Amazon Linux repos, so add the official Jenkins repo:
-3 — Add the Jenkins repository and import the signing key
+```bash
+sudo yum install git -y
+```
 
-# add repo
-sudo curl -fsSL https://pkg.jenkins.io/redhat-stable/jenkins.repo -o /etc/yum.repos.d/jenkins.repo
-# import repo GPG key
-sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+Verify.
 
-✅ Step 4: Install Jenkins
+```bash
+git --version
+```
 
-sudo dnf install jenkins -y
+Find Git path.
 
+```bash
+which git
+```
 
-✅ Step 5: Adjust service file (Java 17 path)
+Example output:
 
-By default, the unit may still point to /usr/bin/java. Verify:
+```
+/usr/bin/git
+```
 
-cat /usr/lib/systemd/system/jenkins.service | grep ExecStart
+---
 
-If it doesn’t use Java 17, edit:
+# Step 4: Install Git Plugin in Jenkins
 
-sudo vi /usr/lib/systemd/system/jenkins.service
+Manage Jenkins
 
+→ Plugins
 
-Replace ExecStart with:
+→ Available Plugins
 
-ExecStart=/usr/lib/jvm/java-17-amazon-corretto.x86_64/bin/java -Djava.awt.headless=true -jar /usr/share/java/jenkins.war --httpPort=8080
+→ Search **Git**
 
+→ Install
 
-Save with :wq.
+---
 
-✅ Step 6: Reload and start Jenkins
+# Step 5: Configure Git in Jenkins
 
-sudo systemctl daemon-reload
-sudo systemctl enable jenkins
-sudo systemctl start jenkins
+Manage Jenkins
 
-✅ Step 7: Check if it’s running
-sudo systemctl status jenkins -l
+→ Tools
 
+→ Git Installations
 
-You should see:       
-Active: active (running)
-Also confirm port 8080 is listening:
+Name
 
-# check listening port
+```
+Git
+```
 
-ss -ltnp | grep 8080 || sudo ss -ltnp | grep java
+Path to Git
 
-# follow logs
+```
+/usr/bin/git
+```
 
-sudo journalctl -u jenkins -f
+Click **Apply** → **Save**
 
-# or older logs
+---
 
-sudo tail -n 200 /var/log/jenkins/jenkins.log
+# Step 6: Pull Code from GitHub
 
+Create
 
-✅ Step 8: Open firewall (if needed)
+```
+New Item
+```
 
-If using firewalld:
+Select
 
-sudo firewall-cmd --permanent --add-port=8080/tcp
-sudo firewall-cmd --reload
+```
+Freestyle Project
+```
 
+Source Code Management
 
-Or if on AWS EC2 → open port 8080 in the security group.
+```
+Git
+```
 
-✅ Step 9: Unlock Jenkins
+Repository URL
 
-Get the initial admin password:
+```
+https://github.com/username/repository.git
+```
 
-sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+Credentials
 
+- Leave blank for Public Repository
+- Add GitHub credentials for Private Repository
 
-Paste the password, complete setup wizard, install plugins, and create admin user.
+Click
 
+```
+Apply
+Save
+```
 
-Private IP (inside AWS VPC):   hostname -I
-To check Public IP of EC2:   curl -s http://checkip.amazonaws.com
+---
 
+# Step 7: Build Job
+
+Click
+
+```
+Build Now
+```
+
+Open
+
+```
+Console Output
+```
+
+---
+
+# Step 8: Verify Repository Cloned
+
+```bash
+cd /var/lib/jenkins/workspace
+```
+
+```bash
+ls -l
+```
+
+```bash
+cd <project-name>
+```
+
+Example
+
+```bash
+cd webapp
+```
+
+```bash
+ls -l
+```
+
+---
+
+# Step 9: Install Apache Maven
+
+Go to /opt
+
+```bash
+cd /opt
+```
+
+Download Maven.
+
+```bash
+sudo wget https://downloads.apache.org/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz
+```
+
+Extract.
+
+```bash
+sudo tar -xvzf apache-maven-3.9.11-bin.tar.gz
+```
+
+Rename folder.
+
+```bash
+sudo mv apache-maven-3.9.11 maven
+```
+
+Verify.
+
+```bash
+ls -l
+```
+
+Go inside Maven.
+
+```bash
+cd /opt/maven
+```
+
+```bash
+ls -l
+```
+
+Verify Maven.
+
+```bash
+./bin/mvn -v
+```
+
+---
+
+# Step 10: Configure Maven Environment Variables
+
+Go to home directory.
+
+```bash
+cd ~
+```
+
+Open profile.
+
+```bash
+vi ~/.bash_profile
+```
+
+Add the following.
+
+```bash
+export M2_HOME=/opt/maven
+export M2=/opt/maven/bin
+export JAVA_HOME=/usr/lib/jvm/java-17-amazon-corretto
+export PATH=$PATH:$JAVA_HOME/bin:$M2_HOME/bin
+```
+
+Verify Java location if needed.
+
+```bash
+find /usr/lib/jvm -name java
+```
+
+or
+
+```bash
+readlink -f $(which java)
+```
+
+Reload profile.
+
+```bash
+source ~/.bash_profile
+```
+
+Verify.
+
+```bash
+echo $PATH
+```
+
+```bash
+mvn -v
+```
+
+---
+
+# Step 11: Install Maven Plugin
+
+Manage Jenkins
+
+→ Plugins
+
+→ Available Plugins
+
+Search
+
+```
+Maven Integration
+```
+
+Install
+
+---
+
+# Step 12: Configure Maven in Jenkins
+
+Manage Jenkins
+
+→ Tools
+
+## JDK
+
+Name
+
+```
+Java-17
+```
+
+JAVA_HOME
+
+```
+/usr/lib/jvm/java-17-amazon-corretto
+```
+
+## Maven
+
+Name
+
+```
+Maven-3.9.11
+```
+
+MAVEN_HOME
+
+```
+/opt/maven
+```
+
+Click
+
+```
+Apply
+Save
+```
+
+---
+
+# Step 13: Create Maven Project
+
+```
+New Item
+```
+
+Choose
+
+```
+Maven Project
+```
+
+Description
+
+```
+Build Java Maven Project
+```
+
+Source Code Management
+
+```
+Git
+```
+
+Repository URL
+
+```
+https://github.com/username/repository.git
+```
+
+Goals
+
+```
+clean install
+```
+
+Click
+
+```
+Apply
+Save
+```
+
+---
+
+# Step 14: Build Project
+
+```
+Build Now
+```
+
+Open
+
+```
+Console Output
+```
+
+---
+
+# Step 15: Verify WAR File
+
+```bash
+cd /var/lib/jenkins/workspace
+```
+
+```bash
+cd webapp
+```
+
+```bash
+cd target
+```
+
+```bash
+ls -l
+```
+
+Example output
+
+```
+webapp.war
+classes/
+generated-sources/
+maven-status/
+```
+
+The **.war** file is the deployable Java web application created by Maven.

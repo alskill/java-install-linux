@@ -1,22 +1,21 @@
 Jenkins + Git + Maven Setup (Amazon Linux) – Step by Step
-# Step 1: Change the Hostname
+
+## Step 1: Change the Hostname
 
 Check the current hostname.
-
+```bash
 cat /etc/hostname
-
+```
 Edit the hostname file.
-
+```bash
 sudo vi /etc/hostname
-
-Example:
-
-jenkins_server
+```
+Example:   jenkins_server
 
 Change the hostname immediately.
-
+```bash
 sudo hostnamectl set-hostname jenkins_server
-
+```
 Verify:
 
 hostname

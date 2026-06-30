@@ -16,10 +16,8 @@ Change the hostname immediately.
 ```bash
 sudo hostnamectl set-hostname jenkins_server
 ```
-Verify:
-
-hostname
-Step 2: Install Java (Required for Jenkins)
+Verify:  hostname
+# Step 2: Install Java (Required for Jenkins)
 
 Update the server.
 

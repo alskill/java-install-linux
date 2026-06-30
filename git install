@@ -1,132 +1,345 @@
-cat /etc/hostname 
-vi /etc/hostname
-change host name 
+Jenkins + Git + Maven Setup (Amazon Linux) – Step by Step
+# Step 1: Change the Hostname
 
-hostname jenkins_server
+Check the current hostname.
 
-first install jenkins plugin and dependencies and java   
+cat /etc/hostname
 
-INSTALL GIT 
+Edit the hostname file.
+
+sudo vi /etc/hostname
+
+Example:
+
+jenkins_server
+
+Change the hostname immediately.
+
+sudo hostnamectl set-hostname jenkins_server
+
+Verify:
+
+hostname
+Step 2: Install Java (Required for Jenkins)
+
+Update the server.
+
+sudo yum update -y
+
+Install Java 17.
+
+sudo yum install java-17-amazon-corretto-devel -y
+
+Verify Java.
+
+java -version
+Step 3: Install Git
+
+Install Git.
 
 sudo yum install git -y
+
+Verify installation.
+
 git --version
 
-jenkins GUI 
-manage jenkins 
-available 
-github
-download and install
+Find the Git binary path.
 
-configure jenkins 
-global tools configuration 
-git  
-name : git 
-path:   go check in aws cli   
-where is git  copy and paste path
-apply ... save
+which git
 
+Example output:
 
-how to pull code from github to jenkins
+/usr/bin/git
 
-free style job
-source code mnagement    git
-repository   :  go and copy git URL and paste
-credential  :  its for private repository 
-apply....  save
+Save this path. It will be used in Jenkins.
 
-build job
-how to check if git has cloned to jenkins work space once build u could see jenkins workspace on console output
-/var/lib/jenkins/workspace  
-now
-cd /var/lib/jenkins/workspace 
-ll
-check pull code from github is where the cloned 
+Step 4: Install Git Plugin in Jenkins
 
+Open Jenkins.
 
-step 2
+Manage Jenkins
+        ↓
+Plugins
+        ↓
+Available Plugins
+        ↓
+Search: Git
+        ↓
+Install
 
-maven with jenkins
-it is java application go apache maven download 
-aws cli
-cd root
-cd /opt
-wget 	apache-maven-3.9.11-bin.tar.gz
-tar -xvzf apache-maven-3.9.11-bin.tar.gz
-ll
-mv directory name maven
-ll
-cd maven
-ll
-can see different directories
-cd bin
-./mvn -v
-cd ~
-ll
-pwd
-it will be root
-ll -a
-vi .bash_profile
-edit 
-M2_HOME=/opt/maven # (where maven is locaed )
-M2=/opt/maven/bin  # (where binary files are located)
- #(open duplicate session sudo su -   find / -name java-17*
-JAVA_HOME=copy the path of java  it will located in /usr/lib/java
+Wait until the installation completes.
 
-PATH=$PATH /bin:$JAVA_HOME:$M2_HOME:$M2  ($ TAKES VALUE PROVIDDED ABOVE)
-:savefile
-check 
-echo $PATH  (it wont update )
-either logout and login (now it will be update
-source .bash_profile
-echo $PATH
-mvn -v #(now u van execute)
+Step 5: Configure Git in Jenkins
 
-configure maven in jenkins
-manage plugin
-available
-maven 
-download install
+Go to:
 
-manage jenkins
-global configuration
-install JDk 
-name:  java 17
-JAVA_HOME :  #(copy from echo $PATH and paste)
+Manage Jenkins
+        ↓
+Tools
+        ↓
+Git Installations
 
-maveN
-NAME : MAVEN 3.9.11
-MAVEN_HOME : /opt/maven
-apply  save
+Configure:
 
-now build job
-new project name
-maven project
-ok
+Name:
+Git
 
-give description 
-git : clone repository
-goals : clean install
-apply   save
+Path to Git:
+/usr/bin/git
 
-build
-it has created a warfile while building the project
-cd /var/lib/jenkins
-ll
-cd workspace/
-ll
+Click:
+
+Apply
+Save
+Step 6: Pull Code from GitHub into Jenkins
+
+Create a new Jenkins job.
+
+New Item
+        ↓
+Freestyle Project
+
+Enter the project name.
+
+Click OK.
+
+Configure Source Code Management
+Source Code Management
+        ↓
+Git
+
+Repository URL:
+
+https://github.com/username/repository.git
+
+Copy the HTTPS Git URL from your GitHub repository.
+
+Credentials:
+
+Leave empty for a public repository.
+Add GitHub credentials for a private repository.
+
+Click:
+
+Apply
+Save
+Step 7: Build the Job
+
+Click:
+
+Build Now
+
+Open:
+
+Build History
+        ↓
+Console Output
+
+If successful, Jenkins clones the repository into its workspace.
+
+Step 8: Verify the Repository was Cloned
+
+Go to the Jenkins workspace.
+
+cd /var/lib/jenkins/workspace
+
+List the projects.
+
+ls -l
+
+Open your project.
+
+cd <project-name>
+
+Example:
+
 cd webapp
-ll
+
+Check the files.
+
+ls -l
+
+If you see your project files, Git cloning was successful.
+
+Step 9: Install Apache Maven
+
+Go to the /opt directory.
+
+cd /opt
+
+Download Maven.
+
+sudo wget https://downloads.apache.org/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz
+
+Extract it.
+
+sudo tar -xvzf apache-maven-3.9.11-bin.tar.gz
+
+Rename the folder.
+
+sudo mv apache-maven-3.9.11 maven
+
+Verify.
+
+ls -l
+
+Go inside Maven.
+
+cd /opt/maven
+
+Check the folders.
+
+ls -l
+
+Verify Maven.
+
+./bin/mvn -v
+Step 10: Configure Maven Environment Variables
+
+Go to the root user's home directory.
+
+cd ~
+
+Open the profile.
+
+vi ~/.bash_profile
+
+Add the following lines.
+
+export M2_HOME=/opt/maven
+export M2=/opt/maven/bin
+export JAVA_HOME=/usr/lib/jvm/java-17-amazon-corretto
+export PATH=$PATH:$JAVA_HOME/bin:$M2_HOME/bin
+
+Note: Verify the Java path before saving.
+
+Find Java location.
+
+find /usr/lib/jvm -name java
+
+or
+
+readlink -f $(which java)
+
+Save and exit.
+
+Reload the profile.
+
+source ~/.bash_profile
+
+Verify.
+
+echo $PATH
+
+Check Maven.
+
+mvn -v
+Step 11: Install Maven Plugin in Jenkins
+
+Go to:
+
+Manage Jenkins
+        ↓
+Plugins
+        ↓
+Available Plugins
+
+Search:
+
+Maven Integration
+
+Install the plugin.
+
+Step 12: Configure JDK and Maven in Jenkins
+
+Go to:
+
+Manage Jenkins
+        ↓
+Tools
+JDK
+Name:
+Java-17
+
+JAVA_HOME:
+/usr/lib/jvm/java-17-amazon-corretto
+Maven
+Name:
+Maven-3.9.11
+
+MAVEN_HOME:
+/opt/maven
+
+Click:
+
+Apply
+Save
+Step 13: Create a Maven Project
+New Item
+        ↓
+Maven Project
+
+Enter the project name.
+
+Click OK.
+
+Configure the Project
+
+Description:
+
+Build Java Maven Project
+
+Source Code Management:
+
+Git
+
+Repository URL:
+
+https://github.com/username/repository.git
+
+Build Goals:
+
+clean install
+
+Click:
+
+Apply
+Save
+Step 14: Build the Maven Project
+
+Click:
+
+Build Now
+
+Open:
+
+Console Output
+
+A successful build downloads dependencies, compiles the project, runs tests (if any), and creates the build artifact.
+
+Step 15: Verify the WAR File
+
+Go to the Jenkins workspace.
+
+cd /var/lib/jenkins/workspace
+
+Open your project.
+
+cd webapp
+
+Go to the target directory.
+
 cd target
-ll   (here artifacts get created)
 
+List the files.
 
+ls -l
 
+Example output:
 
+webapp.war
+classes/
+generated-sources/
+maven-status/
 
-
-
-
-
-
-
-
+The .war file is the deployable Java web application artifact generated by Maven.
